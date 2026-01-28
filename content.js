@@ -266,8 +266,13 @@ function generateComments(data, realCount) {
   const comments = [];
   const fallbackTimes = ["2d", "4h", "12m", "1d"];
 
+  // Shuffle messages to pick unique ones
+  const availableMessages = [...userConfig.positiveMessages].sort(() => Math.random() - 0.5);
+
   for (let i = 0; i < count; i++) {
-    const msg = userConfig.positiveMessages[Math.floor(Math.random() * userConfig.positiveMessages.length)];
+    // Pick unique message if available, else fallback to random
+    const msg = availableMessages[i] || userConfig.positiveMessages[Math.floor(Math.random() * userConfig.positiveMessages.length)];
+
     const identity = identities[Math.floor(Math.random() * identities.length)];
     const time = ["00:15", "01:30", "02:45", "10:22", "00:05"][Math.floor(Math.random() * 5)];
 
