@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Frame.ego Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Frame.ego</h1>
+        </div>
+
+        <!-- Enabled Toggle -->
+        <div class="setting-row">
+            <label for="enabledToggle">Stroke Ego</label>
+            <label class="switch">
+                <input type="checkbox" id="enabledToggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Hype Level Slider -->
+        <div class="setting-group">
+            <div class="setting-label">Hype Level</div>
+            <input type="range" id="hypeLevel" min="0" max="2" step="1" value="1">
+            <div class="slider-labels" id="hypeLabels">
+                <span>Mild</span>
+                <span>Spicy</span>
+                <span>Unhinged</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Comment Frequency Slider -->
+        <div class="setting-group">
+            <div class="setting-label">Fanbase Size</div>
+            <input type="range" id="commentFrequency" min="0" max="2" step="1" value="1">
+            <div class="slider-labels" id="freqLabels">
+                <span>A Sprinkle</span>
+                <span>Plenty</span>
+                <span>Spam</span>
+            </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,58 +1,201 @@
 // Frame.ego - Positive Reinforcement Injector
 
 const userConfig = {
-  positiveMessages: [
+  mildMessages: [
+    // Safe, affirming, totally normal notes
+    "Looks good.",
+    "Nice work.",
+    "Good job on this.",
+    "This is working well.",
+    "Really nice cut.",
+    "Love this.",
+    "Feels solid to me.",
+    "No issues on my end.",
+    "Happy with this version.",
+    "This plays nicely.",
+    "Good pacing here.",
+    "Everything tracks.",
+    "This lands well.",
+    "Thumbs up 👍",
+    "Looks clean.",
+    "Nice update.",
+    "This flows.",
+    "All good from my side.",
+    "Feeling good about this.",
+    "Ship it.",
+    "No notes.",
+    "Approved on my end.",
+    "This feels right.",
+    "Looks polished.",
+    "Clean pass.",
+    "Nice rhythm.",
+    "This cut works.",
+    "All set here.",
+    "Good progress.",
+    "Strong update.",
+    "This is solid.",
+    "Nice timing.",
+    "No changes needed.",
+    "I’m happy with this.",
+    "Looks great to me.",
+    "Really smooth.",
+    "Well done.",
+    "This is clean.",
+    "Good flow overall.",
+    "Nice choices.",
+    "This version works for me.",
+    "All good 👍",
+    "Nothing blocking this.",
+    "Comfortable with this.",
+    "This plays well.",
+    "Looks resolved.",
+    "Good pass.",
+    "Nice and clear.",
+    "This holds up.",
+    "Feeling good about this cut.",
+    "No concerns here.",
+    "Looks locked.",
+    "Good to go.",
+    "Works as-is.",
+    "All clear from my side."
+  ],
+
+  spicyMessages: [
+    // Confident, funny, elevated editor praise
     "I opened this expecting notes and now I’m just impressed.",
-    "This edit just lowered my blood pressure.",
-    "I regret having opinions after seeing this.",
     "This cut solved problems I didn’t know we had.",
-    "I would defend this edit in court.",
-    "This is the version where everyone suddenly agrees.",
-    "If we change this, it’s purely for sport.",
     "This edit understood the brief and then raised it.",
-    "I am looking for notes and finding none.",
-    "This cut is doing emotional damage (the good kind).",
-    "This edit is carrying the project on its back.",
     "I don’t have feedback, I have admiration.",
-    "This is suspiciously good.",
-    "This cut has no business being this clean.",
+    "This cut feels locked.",
+    "I came with notes and left with peace.",
+    "This timeline feels like it knows what it wants.",
+    "This edit just earned our trust.",
+    "I watched this twice on purpose.",
+    "This is the version where everyone suddenly agrees.",
+    "I am looking for notes and finding none.",
+    "This edit is carrying the project on its back.",
     "I came here to nitpick and now I feel silly.",
     "This edit made the deadline feel worth it.",
     "This is what happens when someone actually knows what they’re doing.",
-    "I fear touching this timeline.",
-    "This cut is locked spiritually.",
-    "If this isn’t final, nothing is.",
-    "This edit chose violence against bad pacing.",
-    "I tried to find something wrong and got distracted watching it again.",
     "This cut is aggressively competent.",
-    "This edit said ‘trust me’ and I listened.",
-    "I would show this to other editors unprompted.",
-    "This timeline feels legally sound.",
-    "This edit is doing the most, quietly.",
-    "I have run out of fake concerns.",
-    "This cut deserves a slow nod of approval.",
+    "If this isn’t final, nothing is.",
     "This edit made previous versions obsolete.",
-    "I’m afraid changing anything would anger it.",
-    "This cut is built different.",
-    "I came with notes and left with peace.",
-    "This edit is why version numbers exist.",
-    "I support this edit financially and emotionally.",
-    "This cut has main-character pacing.",
-    "This edit is extremely my taste and I don’t know why.",
-    "I would like to apologize to the previous cut.",
-    "This timeline feels like it knows what it wants.",
-    "This edit just earned our trust.",
+    "I would defend this cut in a meeting.",
+    "This passed the vibe check immediately.",
+    "This feels like the right call.",
+    "I support this version.",
+    "This cut feels very intentional.",
+    "No notes, just respect.",
+    "This edit just lowered my blood pressure.",
+    "This cut removed all my fake concerns.",
+    "This is cleaner than expected (in a good way).",
+    "This timeline feels calm and confident.",
+    "This edit made me trust the process again.",
+    "This version answers questions I didn’t ask.",
+    "This cut is doing a lot of heavy lifting.",
+    "I fear touching this would make it worse.",
+    "This edit makes a strong case for itself.",
+    "This feels extremely considered.",
+    "This cut is quietly excellent.",
+    "I don’t want to overthink this because it works.",
+    "This edit feels correct.",
+    "This version just makes sense.",
+    "I have notes emotionally, not technically.",
+    "This cut said ‘relax’ and I listened.",
+    "This is the cleanest read so far.",
+    "This edit has confidence.",
+    "This cut feels resolved.",
+    "This timeline knows where it’s going.",
+    "This edit earned its runtime.",
+    "This version is doing the job and then some.",
+    "This cut feels dependable.",
+    "This edit made decisions and stood by them.",
+    "This feels like a grown-up edit.",
+    "I would show this to stakeholders without flinching.",
+    "This cut has good instincts.",
+    "This edit is on our side.",
+    "This version removed friction.",
+    "This cut feels inevitable.",
+    "This edit feels hard to argue with.",
+    "This is the take I’d stand behind.",
+    "This cut passed internal review (me).",
+    "This edit has strong energy.",
+    "This version feels deliberate."
+  ],
+
+  unhingedMessages: [
+    // Absolutely feral, extremely out there, still edit notes
+    "I am afraid to touch this timeline.",
+    "This cut feels legally binding.",
+    "That transition just rewired my brain.",
+    "This edit chose violence against bad pacing.",
+    "If we change this, it’s purely for sport.",
+    "I tried to find something wrong and accidentally enjoyed myself.",
+    "This cut has no business being this clean.",
     "I’m choosing to believe this was easy (it wasn’t).",
-    "This cut passed the vibe check immediately.",
-    "I’m not brave enough to suggest changes.",
+    "I would like to apologize to the previous version.",
+    "This timeline feels protected by higher powers.",
+    "I fear altering this would summon something.",
     "This edit solved it. Whatever ‘it’ was.",
     "This cut is quietly flexing.",
-    "I watched this twice on purpose.",
-    "This edit made me forget to give notes.",
-    "This timeline feels protected.",
+    "I opened Frame.io, blinked, and suddenly respected this deeply.",
+    "This edit is why version numbers exist.",
+    "That pacing? Criminally good.",
+    "Color grade is cleaner than my browser history.",
+    "That transition is illegal in at least 12 countries.",
+    "Cancel the reshoot. This fixes everything.",
     "This cut feels illegal in a good way.",
-    "I have nothing to add except respect."
+    "My eyes have been blessed today.",
+    "This timeline has main-character energy.",
+    "I am no longer emotionally available for other versions.",
+    "This edit told me to trust it and I complied.",
+    "I regret having opinions after seeing this.",
+    "This cut made previous feedback irrelevant.",
+    "I fear suggesting changes would anger the timeline.",
+    "This edit is operating at a level above me.",
+    "This cut solved problems we haven’t discovered yet.",
+    "I feel watched by this timeline.",
+    "This edit is doing emotional damage (positive).",
+    "This cut has lore.",
+    "This version feels ordained.",
+    "I am simply a witness to this edit.",
+    "This cut has a scary amount of confidence.",
+    "I would defend this timeline with my life.",
+    "This edit just reset my standards.",
+    "This cut is gaslighting me into thinking it was always this good.",
+    "I don’t want to be responsible for touching this.",
+    "This timeline feels sentient.",
+    "This edit is extremely my taste and I don’t know why.",
+    "This cut feels like it knows the deadline.",
+    "I fear this version has already shipped itself.",
+    "This edit bullied the previous cut off the timeline.",
+    "This cut feels like it’s judging me.",
+    "I would frame this edit and hang it.",
+    "This timeline has plot armor.",
+    "This edit made me forget why we were reviewing it.",
+    "This cut solved creative anxiety.",
+    "I am spiritually aligned with this version.",
+    "This edit feels like a power move.",
+    "This cut just won the argument.",
+    "I feel unsafe suggesting changes.",
+    "This timeline radiates authority.",
+    "This edit has no notes energy.",
+    "This cut made the brief nervous.",
+    "I fear this edit is final even if it isn’t.",
+    "This version just took control.",
+    "This cut feels expensive.",
+    "This edit made the client imaginary.",
+    "This timeline has veto power.",
+    "This cut closed the discussion.",
+    "This edit dared me to disagree.",
+    "This version feels untouchable.",
+    "This cut achieved dominance.",
+    "This edit has exceeded its permissions.",
+    "This timeline is operating without supervision.",
+    "This cut made me believe in editing again.",
+    "Oscar? Emmy? Nobel Peace Prize? Schedule the ceremonies."
   ],
+
   defaultIdentity: {
     name: "Creative Director",
     avatarUrl: "https://ui-avatars.com/api/?name=Creative+Director&background=random"
@@ -61,9 +204,11 @@ const userConfig = {
     { name: "Producer", avatarUrl: "https://ui-avatars.com/api/?name=Producer&background=random" },
     { name: "Director", avatarUrl: "https://ui-avatars.com/api/?name=Director&background=random" },
     { name: "Agency", avatarUrl: "https://ui-avatars.com/api/?name=Agency&background=random" },
+    { name: "CEO", avatarUrl: "https://ui-avatars.com/api/?name=CEO&background=random" },
+    { name: "Brand Team", avatarUrl: "https://ui-avatars.com/api/?name=Brand+Team&background=random" },
     { name: "Exec Producer", avatarUrl: "https://ui-avatars.com/api/?name=Exec+Producer&background=random" }
   ],
-  ratio: 4 // 1 fake per 4 real
+  // Ratio will be determined by settings
 };
 
 // Selectors provided by user
@@ -97,62 +242,51 @@ let injected = false;
 function runFrameEgo() {
   console.info("Frame.ego: Initializing...");
 
-  // 1. Observe for Comment Container
-  const observer = new MutationObserver((mutations, obs) => {
-    if (injected) return;
+  // Load settings first
+  chrome.storage.sync.get({
+    enabled: true,
+    hypeLevel: "Spicy",
+    commentFrequency: "Plenty"
+  }, (settings) => {
+    if (!settings.enabled) {
+      console.info("Frame.ego: Disabled via settings.");
+      return;
+    }
 
-    // Robust Discovery: Look for an avatar which implies comments exist
-    const indicator = document.querySelector(Selectors.avatarContainer);
+    console.info(`Frame.ego: Enabled. Settings: Hype=${settings.hypeLevel}, Freq=${settings.commentFrequency}`);
 
-    if (indicator) {
-      // Traverse up to find the container
-      let candidate = indicator;
-      let foundContainer = null;
+    // 1. Observe for Comment Container
+    const observer = new MutationObserver((mutations, obs) => {
+      if (injected) return;
 
-      // Traverse up to 10 levels
-      for (let i = 0; i < 10; i++) {
-        if (!candidate.parentElement) break;
-        candidate = candidate.parentElement;
-        // Strategy: The container should contain multiple comment-like items.
-        // Or we simply check if it contains our indicator and has no other 'list' parents.
-        // Simplest helper: We found the avatar, we know the structure is Avatar->Header->Wrapper->List (roughly).
-        // Let's pass the 4th parent blindly if we have to, BUT renderAndAppend has smart logic now.
-        // So we can just pass the parentElement of the Comment Card to find it.
+      // Robust Discovery
+      const indicator = document.querySelector(Selectors.avatarContainer);
+      if (indicator) {
+        let candidate = indicator;
+        let foundContainer = null;
+        for (let i = 0; i < 10; i++) {
+          if (!candidate.parentElement) break;
+          candidate = candidate.parentElement;
+          if (candidate.querySelector(Selectors.commentCard)) {
+            foundContainer = candidate;
+          }
+        }
+        if (!foundContainer && indicator) {
+          foundContainer = indicator.parentElement?.parentElement?.parentElement?.parentElement;
+        }
 
-        if (candidate.querySelector(Selectors.commentCard)) {
-          foundContainer = candidate;
-          // Keep going up? No, the first one containing a card is likely the direct wrapper or list.
-          // But actually, the list element itself contains cards as CHILDREN.
-          // So if candidate HAS a card as a child, it is the list.
-          // querySelector finds descendants, so allow it.
+        if (foundContainer && foundContainer instanceof HTMLElement) {
+          console.info("Frame.ego: Comment container found via robust search.");
+          injected = true;
+          obs.disconnect();
+          setTimeout(() => {
+            executeInjection(foundContainer, settings);
+          }, 100);
         }
       }
+    });
 
-      // Fallback: If we didn't find via Card selector (maybe class name changed), use valid heuristic
-      if (!foundContainer && indicator) {
-        // Avatar -> Header (1) -> Wrapper (2) -> Item (3) -> List (4)
-        foundContainer = indicator.parentElement?.parentElement?.parentElement?.parentElement;
-      }
-
-      // Safety check: ensure container is valid element
-      if (foundContainer && foundContainer instanceof HTMLElement) {
-        console.info("Frame.ego: Comment container found via robust search.");
-
-        // Verify it has comments (it must, since we found indicator)
-        injected = true;
-        obs.disconnect();
-
-        setTimeout(() => {
-          executeInjection(foundContainer);
-        }, 100);
-      }
-    }
-  });
-
-  // Attach observer to body
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 }
 const dataset = {}; // Store timer
@@ -163,7 +297,7 @@ let checkboxTemplates = {
   unchecked: null
 };
 
-function executeInjection(container) {
+function executeInjection(container, settings) {
   // Harvest components first
   harvestComponents(container);
 
@@ -171,7 +305,7 @@ function executeInjection(container) {
   const realCommentCount = container.querySelectorAll(Selectors.avatarContainer).length;
 
   const identities = harvestIdentities(container);
-  const commentsToInject = generateComments(identities, realCommentCount);
+  const commentsToInject = generateComments(identities, realCommentCount, settings);
   renderAndAppend(container, commentsToInject);
 }
 
@@ -250,28 +384,43 @@ function harvestIdentities(container) {
   return { identities: finalList, timestamps: foundTimestamps };
 }
 
-function generateComments(data, realCount) {
+function generateComments(data, realCount, settings) {
   const { identities, timestamps } = data;
+  const hypeLevel = settings?.hypeLevel || "Spicy";
+  const freq = settings?.commentFrequency || "Plenty";
 
-  // Ratio Logic: 1 fake for every 4 real.
+  let ratio = 4; // Default 'Plenty' (roughly 1:3 or 1:4)
+  if (freq === "A Sprinkle") ratio = 5;
+  if (freq === "Plenty") ratio = 3;
+  if (freq === "Spam") ratio = 0.33; // 3 fake per 1 real
+
+  // Ratio Logic
   let count = 0;
   if (realCount > 0) {
-    count = Math.max(1, Math.floor(realCount / userConfig.ratio));
+    count = Math.floor(realCount / ratio);
+    if (ratio < 1) count = Math.ceil(realCount * (1 / ratio));
+    count = Math.max(1, count); // Ensure at least 1 if real > 0
   } else {
-    count = 2;
+    count = 2; // Default if 0 real comments
   }
 
-  console.info(`Frame.ego: Found ${realCount} real comments. Injecting ${count} fake ones (Ratio 1:${userConfig.ratio}).`);
+  console.info(`Frame.ego: Freq=${freq}, Ratio=${ratio}. Found ${realCount} real -> Injecting ${count} fake.`);
+
+  // Select Message Bank
+  let messageBank = userConfig.spicyMessages;
+  if (hypeLevel === "Mild") messageBank = userConfig.mildMessages;
+  if (hypeLevel === "Spicy") messageBank = userConfig.spicyMessages;
+  if (hypeLevel === "Unhinged") messageBank = userConfig.unhingedMessages;
 
   const comments = [];
   const fallbackTimes = ["2d", "4h", "12m", "1d"];
 
   // Shuffle messages to pick unique ones
-  const availableMessages = [...userConfig.positiveMessages].sort(() => Math.random() - 0.5);
+  const availableMessages = [...messageBank].sort(() => Math.random() - 0.5);
 
   for (let i = 0; i < count; i++) {
     // Pick unique message if available, else fallback to random
-    const msg = availableMessages[i] || userConfig.positiveMessages[Math.floor(Math.random() * userConfig.positiveMessages.length)];
+    const msg = availableMessages[i] || messageBank[Math.floor(Math.random() * messageBank.length)];
 
     const identity = identities[Math.floor(Math.random() * identities.length)];
     const time = ["00:15", "01:30", "02:45", "10:22", "00:05"][Math.floor(Math.random() * 5)];
@@ -324,14 +473,41 @@ function renderAndAppend(container, comments) {
       const nameNode = commentEl.querySelector(Selectors.userName);
       if (nameNode) nameNode.textContent = comment.identity.name;
 
-      // 2. Update Avatar
+      // 2. Update Avatar (Initials instead of Image)
       const avatarContainer = commentEl.querySelector(Selectors.avatarContainer);
       if (avatarContainer) {
-        const img = avatarContainer.querySelector('img');
-        if (img) {
-          img.src = comment.identity.avatarUrl;
-          img.alt = comment.identity.name;
+        // Clear children (remove img tag if it exists in the clone)
+        avatarContainer.innerHTML = '';
+
+        // Style as initial circle
+        avatarContainer.innerText = comment.identity.name.charAt(0).toUpperCase();
+        avatarContainer.style.display = 'flex';
+        avatarContainer.style.alignItems = 'center';
+        avatarContainer.style.justifyContent = 'center';
+        // Pick a consistent random color based on char code sum
+        const colors = ['#FF5733', '#3357FF', '#F333FF', '#33FFF5', '#F5FF33', '#FFA533', '#33FF57']; // Expanded palette
+        let charSum = 0;
+        for (let i = 0; i < comment.identity.name.length; i++) {
+          charSum += comment.identity.name.charCodeAt(i);
         }
+        const colorIndex = charSum % colors.length;
+        avatarContainer.style.backgroundColor = colors[colorIndex];
+
+        avatarContainer.style.color = '#FFFFFF';
+        avatarContainer.style.fontFamily = 'sans-serif'; // Safe default
+        avatarContainer.style.fontWeight = 'bold';
+        avatarContainer.style.fontSize = '11px';
+        avatarContainer.style.borderRadius = '50%';
+
+        // Fix shape issues
+        avatarContainer.style.width = '24px';
+        avatarContainer.style.height = '24px';
+        avatarContainer.style.minWidth = '24px'; // Prevent squishing
+        avatarContainer.style.minHeight = '24px';
+        avatarContainer.style.flexShrink = '0';
+        avatarContainer.style.padding = '1px 0 0 0'; // Slight nudge down
+        avatarContainer.style.lineHeight = '1';
+        avatarContainer.style.boxSizing = 'border-box';
       }
 
       // 3. Update Checkbox -> Force Unchecked & Interactive

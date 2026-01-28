@@ -3,16 +3,40 @@
   "name": "Frame.ego",
   "version": "1.0",
   "description": "Injects positive reinforcement comments into Frame.io V3 reviews.",
-  "permissions": [],
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://app.frame.io/*"],
-      "js": ["content.js"],
-      "css": ["styles.css"],
+      "matches": [
+        "https://app.frame.io/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
       "run_at": "document_end"
     }
   ],
   "host_permissions": [
     "https://app.frame.io/*"
-  ]
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Frame.ego",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }
