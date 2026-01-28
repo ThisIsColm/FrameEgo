@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Frame.ego",
+  "version": "1.0",
+  "description": "Injects positive reinforcement comments into Frame.io V3 reviews.",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["https://app.frame.io/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "host_permissions": [
+    "https://app.frame.io/*"
+  ]
+}

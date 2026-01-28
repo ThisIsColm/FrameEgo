@@ -1,0 +1,5 @@
+/* Frame.ego styles if needed */
+.frame-ego-injected {
+  /* Marker class just in case we need to identify them later */
+  opacity: 1; /* Ensure visible */
+}
