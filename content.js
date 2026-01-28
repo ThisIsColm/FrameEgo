@@ -307,6 +307,43 @@ function executeInjection(container, settings) {
   const identities = harvestIdentities(container);
   const commentsToInject = generateComments(identities, realCommentCount, settings);
   renderAndAppend(container, commentsToInject);
+
+  // Update the UI counter
+  updateCommentCount(commentsToInject.length);
+}
+
+function updateCommentCount(addedCount) {
+  // Primary Strategy: User provided XPath
+  const xpath = '//*[@id="body-wrapper"]/div[6]/div/div/div[1]/div[2]/div/div/div[2]/div/div/div[2]/div/div[1]/button[1]';
+  let countBtn = null;
+
+  try {
+    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    countBtn = result.singleNodeValue;
+  } catch (e) {
+    console.warn("Frame.ego: XPath evaluation failed", e);
+  }
+
+  // Fallback Strategy: Find button with text matching "X Comments"
+  if (!countBtn) {
+    const buttons = Array.from(document.querySelectorAll('button'));
+    countBtn = buttons.find(b => /^\d+\s+Comments?$/i.test(b.textContent.trim()));
+  }
+
+  if (countBtn) {
+    const currentText = countBtn.textContent.trim();
+    const match = currentText.match(/^(\d+)/);
+    if (match) {
+      const currentCount = parseInt(match[1], 10);
+      const newCount = currentCount + addedCount;
+      // Preserve "Comment" vs "Comments" logic if needed, usually just "Comments"
+      const suffix = newCount === 1 ? "Comment" : "Comments";
+      countBtn.textContent = `${newCount} ${suffix}`;
+      console.info(`Frame.ego: Updated count from ${currentCount} to ${newCount}`);
+    }
+  } else {
+    console.warn("Frame.ego: Could not find comment count button to update.");
+  }
 }
 
 function harvestComponents(container) {
@@ -391,7 +428,7 @@ function generateComments(data, realCount, settings) {
 
   let ratio = 4; // Default 'Plenty' (roughly 1:3 or 1:4)
   if (freq === "A Sprinkle") ratio = 5;
-  if (freq === "Plenty") ratio = 3;
+  if (freq === "Plenty") ratio = 2;
   if (freq === "Spam") ratio = 0.33; // 3 fake per 1 real
 
   // Ratio Logic
