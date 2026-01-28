@@ -419,9 +419,18 @@ function renderAndAppend(container, comments) {
         const possibleRelativeTime = Array.from(header.querySelectorAll('span, div'))
           .find(el => el.textContent.match(/^\d+[smhd]$/) || el.textContent.includes('ago') || el.textContent === 'Just now');
         if (possibleRelativeTime) {
-          possibleRelativeTime.textContent = ` • ${comment.relativeTime}`;
-          possibleRelativeTime.style.marginLeft = "4px";
-          possibleRelativeTime.style.opacity = "0.7";
+          possibleRelativeTime.textContent = comment.relativeTime;
+          // Apply exact styles requested by user
+          possibleRelativeTime.style.fontFamily = "Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif";
+          possibleRelativeTime.style.fontSize = "13px";
+          possibleRelativeTime.style.lineHeight = "1.5";
+          possibleRelativeTime.style.color = "rgb(125, 130, 156)";
+          possibleRelativeTime.style.fontWeight = "bold";
+          possibleRelativeTime.style.marginLeft = "5px";
+          possibleRelativeTime.style.opacity = "1";
+          possibleRelativeTime.style.webkitTextSizeAdjust = "100%";
+          possibleRelativeTime.style.userSelect = "none";
+          possibleRelativeTime.style.webkitTapHighlightColor = "transparent";
         }
       }
 
@@ -438,8 +447,8 @@ function renderAndAppend(container, comments) {
         </div>
         <div style="margin-left: 10px; flex: 1;">
             <div style="display: flex; align-items: baseline;">
-                 <span class="${Selectors.classes.userName}">${comment.identity.name}</span>
-                 <span style="margin-left: 8px; font-size: 0.8em; color: #aaa;">Just now</span>
+                 <span class="${Selectors.classes.userName}" style="font-weight: bold; color: white;">${comment.identity.name}</span>
+                 <span style="margin-left: 5px; font-size: 13px; color: rgb(125, 130, 156); font-weight: bold; font-family: Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif; line-height: 1.5; -webkit-text-size-adjust: 100%; user-select: none;">${comment.relativeTime}</span>
             </div>
             <div class="${Selectors.classes.commentBodyWrapper}" style="margin-top: 4px;">
                 <span class="${Selectors.classes.timestampWrapper}" style="color: #5E96F6; font-weight: bold; margin-right: 6px; cursor: pointer;">${comment.timestamp}</span>
