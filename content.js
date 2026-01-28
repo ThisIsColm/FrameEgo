@@ -2,21 +2,67 @@
 
 const userConfig = {
   positiveMessages: [
-    "No notes.",
-    "Love the pacing here.",
-    "This cut is buttery smooth.",
-    "Approved.",
-    "Colors look incredible.",
-    "Exactly what we talked about.",
-    "Ship it.",
-    "The client is going to flip (in a good way).",
-    "Audio mix is perfect.",
-    "Can we lock this version?"
+    "I opened this expecting notes and now I’m just impressed.",
+    "This edit just lowered my blood pressure.",
+    "I regret having opinions after seeing this.",
+    "This cut solved problems I didn’t know we had.",
+    "I would defend this edit in court.",
+    "This is the version where everyone suddenly agrees.",
+    "If we change this, it’s purely for sport.",
+    "This edit understood the brief and then raised it.",
+    "I am looking for notes and finding none.",
+    "This cut is doing emotional damage (the good kind).",
+    "This edit is carrying the project on its back.",
+    "I don’t have feedback, I have admiration.",
+    "This is suspiciously good.",
+    "This cut has no business being this clean.",
+    "I came here to nitpick and now I feel silly.",
+    "This edit made the deadline feel worth it.",
+    "This is what happens when someone actually knows what they’re doing.",
+    "I fear touching this timeline.",
+    "This cut is locked spiritually.",
+    "If this isn’t final, nothing is.",
+    "This edit chose violence against bad pacing.",
+    "I tried to find something wrong and got distracted watching it again.",
+    "This cut is aggressively competent.",
+    "This edit said ‘trust me’ and I listened.",
+    "I would show this to other editors unprompted.",
+    "This timeline feels legally sound.",
+    "This edit is doing the most, quietly.",
+    "I have run out of fake concerns.",
+    "This cut deserves a slow nod of approval.",
+    "This edit made previous versions obsolete.",
+    "I’m afraid changing anything would anger it.",
+    "This cut is built different.",
+    "I came with notes and left with peace.",
+    "This edit is why version numbers exist.",
+    "I support this edit financially and emotionally.",
+    "This cut has main-character pacing.",
+    "This edit is extremely my taste and I don’t know why.",
+    "I would like to apologize to the previous cut.",
+    "This timeline feels like it knows what it wants.",
+    "This edit just earned our trust.",
+    "I’m choosing to believe this was easy (it wasn’t).",
+    "This cut passed the vibe check immediately.",
+    "I’m not brave enough to suggest changes.",
+    "This edit solved it. Whatever ‘it’ was.",
+    "This cut is quietly flexing.",
+    "I watched this twice on purpose.",
+    "This edit made me forget to give notes.",
+    "This timeline feels protected.",
+    "This cut feels illegal in a good way.",
+    "I have nothing to add except respect."
   ],
   defaultIdentity: {
     name: "Creative Director",
     avatarUrl: "https://ui-avatars.com/api/?name=Creative+Director&background=random"
   },
+  extraIdentities: [
+    { name: "Producer", avatarUrl: "https://ui-avatars.com/api/?name=Producer&background=random" },
+    { name: "Director", avatarUrl: "https://ui-avatars.com/api/?name=Director&background=random" },
+    { name: "Agency", avatarUrl: "https://ui-avatars.com/api/?name=Agency&background=random" },
+    { name: "Exec Producer", avatarUrl: "https://ui-avatars.com/api/?name=Exec+Producer&background=random" }
+  ],
   ratio: 4 // 1 fake per 4 real
 };
 
@@ -24,8 +70,8 @@ const userConfig = {
 // Using partial match [class*="..."] to be more robust against minor hash changes if they occur,
 // but sticking close to the provided structure.
 const Selectors = {
-  // Container is provided as XPath. We will handle this dynamically.
-  containerXPath: '//*[@id="body-wrapper"]/div[6]/div/div/div[1]/div[2]/div/div/div[2]/div/div/div[3]/div[1]/div/div[2]',
+  // Container logic is now handled dynamically in runFrameEgo.
+  // We keep this object for general config.
 
   // Classes for harvesting and cloning
   avatarContainer: '[class*="CommentHeader__AvatarContainer"]',
@@ -55,30 +101,72 @@ function runFrameEgo() {
   const observer = new MutationObserver((mutations, obs) => {
     if (injected) return;
 
-    const container = getElementByXPath(Selectors.containerXPath);
-    if (container) {
-      console.info("Frame.ego: Comment container found. Starting injection sequence...");
-      injected = true; // prevent double injection
-      obs.disconnect(); // Stop observing once found
+    // Robust Discovery: Look for an avatar which implies comments exist
+    const indicator = document.querySelector(Selectors.avatarContainer);
 
-      // 2. Buffer wait to allow real comments to render so we can harvest them
-      setTimeout(() => {
-        executeInjection(container);
-      }, 1500);
+    if (indicator) {
+      // Traverse up to find the container
+      let candidate = indicator;
+      let foundContainer = null;
+
+      // Traverse up to 10 levels
+      for (let i = 0; i < 10; i++) {
+        if (!candidate.parentElement) break;
+        candidate = candidate.parentElement;
+        // Strategy: The container should contain multiple comment-like items.
+        // Or we simply check if it contains our indicator and has no other 'list' parents.
+        // Simplest helper: We found the avatar, we know the structure is Avatar->Header->Wrapper->List (roughly).
+        // Let's pass the 4th parent blindly if we have to, BUT renderAndAppend has smart logic now.
+        // So we can just pass the parentElement of the Comment Card to find it.
+
+        if (candidate.querySelector(Selectors.commentCard)) {
+          foundContainer = candidate;
+          // Keep going up? No, the first one containing a card is likely the direct wrapper or list.
+          // But actually, the list element itself contains cards as CHILDREN.
+          // So if candidate HAS a card as a child, it is the list.
+          // querySelector finds descendants, so allow it.
+        }
+      }
+
+      // Fallback: If we didn't find via Card selector (maybe class name changed), use valid heuristic
+      if (!foundContainer && indicator) {
+        // Avatar -> Header (1) -> Wrapper (2) -> Item (3) -> List (4)
+        foundContainer = indicator.parentElement?.parentElement?.parentElement?.parentElement;
+      }
+
+      // Safety check: ensure container is valid element
+      if (foundContainer && foundContainer instanceof HTMLElement) {
+        console.info("Frame.ego: Comment container found via robust search.");
+
+        // Verify it has comments (it must, since we found indicator)
+        injected = true;
+        obs.disconnect();
+
+        setTimeout(() => {
+          executeInjection(foundContainer);
+        }, 100);
+      }
     }
   });
 
+  // Attach observer to body
   observer.observe(document.body, {
     childList: true,
     subtree: true
   });
 }
+const dataset = {}; // Store timer
 
-function getElementByXPath(path) {
-  return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-}
+// Stores valid HTML templates for the checkbox states
+let checkboxTemplates = {
+  checked: null,
+  unchecked: null
+};
 
 function executeInjection(container) {
+  // Harvest components first
+  harvestComponents(container);
+
   // Count real comments first
   const realCommentCount = container.querySelectorAll(Selectors.avatarContainer).length;
 
@@ -87,8 +175,37 @@ function executeInjection(container) {
   renderAndAppend(container, commentsToInject);
 }
 
+function harvestComponents(container) {
+  // Try to find examples of checked and unchecked buttons to clone the HTML from
+  // This ensures perfect SVG matching.
+
+  // User provided unchecked class: CommentHeader__UncheckedCompleteCommentWrapper-qf7yeb-7 kflSgD
+  const uncheckedSelector = '[class*="CommentHeader__UncheckedCompleteCommentWrapper"]';
+  const checkedSelector = '[class*="CommentHeader__CheckedCompleteCommentWrapper"]';
+
+  const uncheckedEl = container.querySelector(uncheckedSelector);
+  const checkedEl = container.querySelector(checkedSelector);
+
+  if (uncheckedEl) {
+    checkboxTemplates.unchecked = uncheckedEl.parentElement.innerHTML; // Get inner content of the button
+    // Use the class from the element found in DOM to be safe, or fallback to user provided
+    Selectors.classes.uncheckedWrapper = uncheckedEl.className;
+  } else {
+    // Fallback if no unchecked comments exist on page
+    // We construct a best-guess SVG or just empty div with the class?
+    // Usually it's a circle.
+    const userClass = "CommentHeader__UncheckedCompleteCommentWrapper-qf7yeb-7 kflSgD";
+    checkboxTemplates.unchecked = `<div aria-haspopup="dialog" aria-expanded="false" class="${userClass}"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="7.5" fill="none" stroke="currentColor" stroke-opacity="0.5"></circle></svg></div>`;
+  }
+
+  if (checkedEl) {
+    checkboxTemplates.checked = checkedEl.parentElement.innerHTML;
+  }
+}
+
 function harvestIdentities(container) {
   const uniqueIdentities = new Map();
+  const foundTimestamps = []; // Harvest relative times e.g. "2d", "14m"
 
   // Find all existing avatars/names
   const avatars = container.querySelectorAll(Selectors.avatarContainer);
@@ -107,44 +224,62 @@ function harvestIdentities(container) {
       if (!uniqueIdentities.has(name)) {
         uniqueIdentities.set(name, { name, avatarUrl: src });
       }
+
+      // Harvest Timestamp: Look for sibling of name that matches time format
+      const header = nameEl.parentElement;
+      if (header) {
+        const timeEl = Array.from(header.querySelectorAll('span, div'))
+          .find(el => el.textContent.trim().match(/^(\d+[smhdwy]|Just now)$/));
+        if (timeEl) {
+          foundTimestamps.push(timeEl.textContent.trim());
+        }
+      }
     }
   }
 
   const identityList = Array.from(uniqueIdentities.values());
-  console.info(`Frame.ego: Harvested ${identityList.length} identities.`);
 
-  if (identityList.length === 0) {
-    return [userConfig.defaultIdentity];
-  }
-  return identityList;
+  // Mix in the extra identities
+  identityList.push(...userConfig.extraIdentities);
+
+  console.info(`Frame.ego: Harvested ${identityList.length} identities and ${foundTimestamps.length} timestamps.`);
+
+  const finalList = identityList.length > 0 ? identityList : [userConfig.defaultIdentity];
+
+  // Return object with both lists
+  return { identities: finalList, timestamps: foundTimestamps };
 }
 
-function generateComments(identities, realCount) {
+function generateComments(data, realCount) {
+  const { identities, timestamps } = data;
+
   // Ratio Logic: 1 fake for every 4 real.
-  // Example: 20 real comments -> 5 fake.
-  // Minimum 1 if there's at least 1 real comment, unless 0 real.
   let count = 0;
   if (realCount > 0) {
     count = Math.max(1, Math.floor(realCount / userConfig.ratio));
   } else {
-    // If 0 real comments, maybe inject 1 just to be nice? Or 0?
-    // "Big Bang" usually implies *some* activity. Let's output 1 or 2.
     count = 2;
   }
 
   console.info(`Frame.ego: Found ${realCount} real comments. Injecting ${count} fake ones (Ratio 1:${userConfig.ratio}).`);
 
   const comments = [];
+  const fallbackTimes = ["2d", "4h", "12m", "1d"];
 
   for (let i = 0; i < count; i++) {
     const msg = userConfig.positiveMessages[Math.floor(Math.random() * userConfig.positiveMessages.length)];
     const identity = identities[Math.floor(Math.random() * identities.length)];
     const time = ["00:15", "01:30", "02:45", "10:22", "00:05"][Math.floor(Math.random() * 5)];
 
+    // Pick a relative time from harvested list, or fallback
+    const pool = timestamps.length > 0 ? timestamps : fallbackTimes;
+    const relTime = pool[Math.floor(Math.random() * pool.length)];
+
     comments.push({
       identity,
       message: msg,
-      timestamp: time
+      timestamp: time,
+      relativeTime: relTime
     });
   }
   return comments;
@@ -192,6 +327,37 @@ function renderAndAppend(container, comments) {
           img.src = comment.identity.avatarUrl;
           img.alt = comment.identity.name;
         }
+      }
+
+      // 3. Update Checkbox -> Force Unchecked & Interactive
+      const completeBtn = commentEl.querySelector('button[data-complete-comment-btn="true"]');
+      if (completeBtn && checkboxTemplates.unchecked) {
+        // Force visual state to unchecked
+        completeBtn.innerHTML = checkboxTemplates.unchecked;
+
+        // Make interactive (fake toggle)
+        // We need simple behavior: click -> swap innerHTML to checked/unchecked
+        completeBtn.style.cursor = "pointer";
+        completeBtn.onclick = (e) => {
+          e.stopPropagation(); // Stop bubbling
+          e.preventDefault();
+
+          // Check current state by looking for specific classes in innerHTML
+          // or just toggle a flag on the element
+          // SAFEGUARD for crash: check if dataset exists, although element existence check handles most cases.
+          const isCurrentlyChecked = completeBtn.dataset && completeBtn.dataset.fakeChecked === "true";
+
+          if (isCurrentlyChecked) {
+            completeBtn.innerHTML = checkboxTemplates.unchecked;
+            if (completeBtn.dataset) completeBtn.dataset.fakeChecked = "false";
+          } else {
+            // Only toggle if we have a checked template
+            if (checkboxTemplates.checked) {
+              completeBtn.innerHTML = checkboxTemplates.checked;
+              if (completeBtn.dataset) completeBtn.dataset.fakeChecked = "true";
+            }
+          }
+        };
       }
 
       // 4. Update Body Message & Timestamp
@@ -251,9 +417,9 @@ function renderAndAppend(container, comments) {
       const header = nameNode ? nameNode.parentElement : null;
       if (header) {
         const possibleRelativeTime = Array.from(header.querySelectorAll('span, div'))
-          .find(el => el.textContent.match(/^\d+[smhd]$/) || el.textContent.includes('ago'));
+          .find(el => el.textContent.match(/^\d+[smhd]$/) || el.textContent.includes('ago') || el.textContent === 'Just now');
         if (possibleRelativeTime) {
-          possibleRelativeTime.textContent = " • Just now";
+          possibleRelativeTime.textContent = ` • ${comment.relativeTime}`;
           possibleRelativeTime.style.marginLeft = "4px";
           possibleRelativeTime.style.opacity = "0.7";
         }
@@ -271,27 +437,36 @@ function renderAndAppend(container, comments) {
             <img src="${comment.identity.avatarUrl}" style="width: 32px; height: 32px; border-radius: 50%;">
         </div>
         <div style="margin-left: 10px; flex: 1;">
-            <div style="display: flex; justify-content: space-between;">
-                <div>
-                    <span class="${Selectors.classes.userName}">${comment.identity.name}</span>
-                    <span style="margin-left: 8px; font-size: 0.8em; color: #888;">Just now</span>
-                </div>
-                <div class="${Selectors.classes.timestampWrapper}" style="color: #9d50f0; font-weight: bold;">
-                    ${comment.timestamp}
-                </div>
+            <div style="display: flex; align-items: baseline;">
+                 <span class="${Selectors.classes.userName}">${comment.identity.name}</span>
+                 <span style="margin-left: 8px; font-size: 0.8em; color: #aaa;">Just now</span>
             </div>
-            <div class="${Selectors.classes.commentBodyWrapper}">
-                ${comment.message}
+            <div class="${Selectors.classes.commentBodyWrapper}" style="margin-top: 4px;">
+                <span class="${Selectors.classes.timestampWrapper}" style="color: #5E96F6; font-weight: bold; margin-right: 6px; cursor: pointer;">${comment.timestamp}</span>
+                <span style="color: #ddd;">${comment.message}</span>
             </div>
         </div>
       `;
     }
 
     commentEl.classList.add('frame-ego-injected');
-    fragment.appendChild(commentEl);
+
+    // MIXING LOGIC: Insert randomly among existing children
+
+    // Determine the true list container.
+    // If we have a referenceNode (a comment wrapper), its parent is likely the list.
+    // If NOT, we fallback to the main container.
+    const targetContainer = (referenceNode && referenceNode.parentNode) ? referenceNode.parentNode : container;
+
+    const currentChildren = targetContainer.children;
+    // We can pick any index from 0 to currentChildren.length.
+    // If we pick currentChildren.length, it appends to the end.
+    const randomIdx = Math.floor(Math.random() * (currentChildren.length + 1));
+    const referenceChild = currentChildren[randomIdx] || null;
+
+    targetContainer.insertBefore(commentEl, referenceChild);
   });
 
-  container.appendChild(fragment);
   console.info(`Frame.ego: Successfully injected ${comments.length} comments.`);
 }
 
