@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Frame.ego",
+  "name": "Frame.ego (Unofficial)",
   "version": "1.0",
   "description": "Injects positive reinforcement comments into Frame.io V3 and V4 reviews.",
   "permissions": [
@@ -31,7 +31,7 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Frame.ego",
+    "default_title": "Frame.ego (Unofficial)",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",

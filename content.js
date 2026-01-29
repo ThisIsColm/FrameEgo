@@ -1,4 +1,4 @@
-// Frame.ego - Positive Reinforcement Injector
+// Frame.ego (Unofficial) - Positive Reinforcement Injector
 
 const userConfig = {
   mildMessages: [
