@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const enabledToggle = document.getElementById('enabledToggle');
     const hypeSlider = document.getElementById('hypeLevel');
     const freqSlider = document.getElementById('commentFrequency');
     const hypeLabelsContainer = document.getElementById('hypeLabels');
@@ -46,17 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Track if toggle was ON when popup opened (for button text change)
-    let wasInitiallyEnabled = false;
-
     // Load saved settings
     chrome.storage.sync.get({
         enabled: true,
         hypeLevel: "Spicy",
         commentFrequency: "Plenty"
     }, (items) => {
-        enabledToggle.checked = items.enabled;
-        wasInitiallyEnabled = items.enabled; // Track initial state
+        // Update button state visually
+        updateButtonUI(items.enabled);
 
         // Convert string back to index for slider
         const hIndex = hypeLevels.indexOf(items.hypeLevel);
@@ -72,21 +68,21 @@ document.addEventListener('DOMContentLoaded', () => {
         checkWarning();
     });
 
-    // Listen for changes
-
-    enabledToggle.addEventListener('change', () => {
-        const isEnabled = enabledToggle.checked;
-        chrome.storage.sync.set({ enabled: isEnabled });
-
-        // If it was on and user turned it off, change button text
+    function updateButtonUI(enabled) {
         const boostBtn = document.getElementById('boostBtn');
-        if (wasInitiallyEnabled && !isEnabled) {
+        const statusBadge = document.getElementById('statusBadge');
+        if (enabled) {
             boostBtn.textContent = 'DISABLE EGO';
+            boostBtn.classList.add('deactivated');
+            statusBadge.style.display = 'flex';
         } else {
             boostBtn.textContent = 'STROKE MY EGO';
+            boostBtn.classList.remove('deactivated');
+            statusBadge.style.display = 'none';
         }
-    });
+    }
 
+    // Listen for changes
     hypeSlider.addEventListener('input', () => {
         const val = parseInt(hypeSlider.value, 10);
         updateLabels(hypeLabelsContainer, val, hypeSlider, hypeLevels, 'hypeLevel');
@@ -103,26 +99,17 @@ document.addEventListener('DOMContentLoaded', () => {
         checkWarning();
     });
 
-    // Boost/Disable button - behavior depends on current state
+    // Establish connection to background to detect popup closure
+    chrome.runtime.connect({ name: "popup" });
+
+    // Boost button - toggle enabled state
     const boostBtn = document.getElementById('boostBtn');
     boostBtn.addEventListener('click', () => {
-        // Check what mode we're in based on button text
-        if (boostBtn.textContent === 'DISABLE EGO') {
-            // Already disabled, just refresh to remove comments
-            // (toggle is already off, setting already saved)
-        } else {
-            // STROKE MY EGO - enable if off, then refresh
-            if (!enabledToggle.checked) {
-                enabledToggle.checked = true;
-                chrome.storage.sync.set({ enabled: true });
-            }
-        }
-
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) {
-                chrome.tabs.reload(tabs[0].id);
-                window.close(); // Close popup after refresh
-            }
+        chrome.storage.sync.get({ enabled: true }, (items) => {
+            const newState = !items.enabled;
+            chrome.storage.sync.set({ enabled: newState }, () => {
+                window.close(); // Closing triggers the refresh
+            });
         });
     });
 });

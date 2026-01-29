@@ -4,8 +4,12 @@
   "version": "1.0",
   "description": "Injects positive reinforcement comments into Frame.io V3 and V4 reviews.",
   "permissions": [
-    "storage"
+    "storage",
+    "tabs"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": [

@@ -25,7 +25,7 @@ body {
 .container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     padding: 20px;
     padding-bottom: 20px;
 }
@@ -64,11 +64,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    font-weight: 700;
-    font-family: var(--font-heading);
-    font-size: 20px;
     box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.25);
+    overflow: hidden;
+}
+
+.logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .wordmark {
@@ -77,6 +80,57 @@ body {
     font-weight: 700;
     letter-spacing: -0.025em;
     color: #fff;
+}
+
+.status-badge {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 224, 209, 0.05);
+    border: 1px solid rgba(0, 224, 209, 0.15);
+    border-radius: 12px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    font-family: var(--font-heading);
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0;
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    position: relative;
+}
+
+.pulse-dot::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
 }
 
 .divider {
@@ -92,7 +146,7 @@ body {
     font-weight: 700;
     text-align: center;
     color: var(--foreground);
-    margin: 4px 0 12px 0;
+    margin: 4px 0 4px 0;
     letter-spacing: -0.01em;
 }
 
@@ -103,71 +157,6 @@ body {
     -webkit-text-fill-color: transparent;
     padding: 4px 6px;
     display: inline-block;
-}
-
-/* Toggle Switch Row */
-.setting-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--card);
-    padding: 12px 16px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-}
-
-.setting-row label {
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--secondary);
-    border: 1px solid var(--border);
-    transition: .3s;
-    border-radius: 34px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 2px;
-    /* adjusted for border */
-    background-color: var(--muted);
-    transition: .3s;
-    border-radius: 50%;
-}
-
-input:checked+.slider {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-input:checked+.slider:before {
-    transform: translateX(18px);
-    background-color: #fff;
 }
 
 /* Range Sliders Group */
@@ -317,16 +306,19 @@ input[type=range]:focus {
     display: none;
     background: linear-gradient(135deg, #ef4444, #991b1b);
     color: #fff;
-    padding: 12px 16px;
+    padding: 6px 12px;
     border-radius: 12px;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 9.5px;
+    font-weight: 700;
     line-height: 1.4;
     text-align: center;
-    margin-bottom: 4px;
+    margin-bottom: 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
     animation: fadeIn 0.3s ease-out;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: var(--font-heading);
 }
 
 @keyframes fadeIn {
@@ -367,6 +359,19 @@ input[type=range]:focus {
 .boost-btn:active {
     transform: translateY(0);
     box-shadow: 0 2px 10px rgba(109, 40, 217, 0.3);
+}
+
+.boost-btn.deactivated {
+    background: var(--secondary);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    box-shadow: none;
+}
+
+.boost-btn.deactivated:hover {
+    transform: none;
+    background: var(--border);
+    color: var(--foreground);
 }
 
 /* Disclaimer */

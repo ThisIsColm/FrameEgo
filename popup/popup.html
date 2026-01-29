@@ -16,7 +16,9 @@
     <div class="container">
         <div class="header">
             <div class="logo-group">
-                <div class="logo-box">F</div>
+                <div class="logo-box">
+                    <img src="../icons/icon128.png" alt="Frame.Ego Logo" class="logo-img">
+                </div>
                 <span class="wordmark">Frame.Ego</span>
             </div>
             <a href="https://buymeacoffee.com/thisiscolm" target="_blank" class="header-support"
@@ -25,16 +27,7 @@
 
         <p class="tagline">Turn feedback into <span class="gradient-text">compliments.</span></p>
 
-        <!-- Enabled Toggle -->
-        <div class="setting-row">
-            <label for="enabledToggle">Stroke Ego</label>
-            <label class="switch">
-                <input type="checkbox" id="enabledToggle">
-                <span class="slider round"></span>
-            </label>
-        </div>
 
-        <div class="divider"></div>
 
         <!-- Hype Level Slider -->
         <div class="setting-group">
@@ -49,8 +42,6 @@
             </div>
         </div>
 
-        <div class="divider"></div>
-
         <!-- Comment Frequency Slider -->
         <div class="setting-group">
             <div class="setting-label">
@@ -64,11 +55,15 @@
             </div>
         </div>
 
-        <div class="divider"></div>
-
         <!-- Warning Box -->
         <div id="warningBox" class="warning-box">
             Warning: Editor confidence may occur.
+        </div>
+
+        <!-- Status Indicator -->
+        <div id="statusBadge" class="status-badge">
+            <span class="pulse-dot"></span>
+            EGO MODE ACTIVATED
         </div>
 
         <!-- Boost Button -->

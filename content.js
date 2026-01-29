@@ -292,11 +292,11 @@ let Selectors = SelectorsV3;
 let detectedVersion = 'v3';
 
 let injected = false;
+let activeObserver = null;
 
 function runFrameEgo() {
   console.info("Frame.ego: Initializing...");
 
-  // Load settings first
   chrome.storage.sync.get({
     enabled: true,
     hypeLevel: "Spicy",
@@ -309,9 +309,19 @@ function runFrameEgo() {
 
     console.info(`Frame.ego: Enabled. Settings: Hype=${settings.hypeLevel}, Freq=${settings.commentFrequency}`);
 
+    // Disconnect any existing observer before starting a new one
+    if (activeObserver) {
+      activeObserver.disconnect();
+      activeObserver = null;
+    }
+
     // Observe for Comment Container
-    const observer = new MutationObserver((mutations, obs) => {
-      if (injected) return;
+    activeObserver = new MutationObserver((mutations, obs) => {
+      if (injected) {
+        obs.disconnect();
+        activeObserver = null;
+        return;
+      }
 
       // Always try to detect version first
       const newVersion = detectFrameVersion();
@@ -378,6 +388,7 @@ function runFrameEgo() {
           console.info(`Frame.ego: Comment container found (${detectedVersion.toUpperCase()} mode)`);
           injected = true;
           obs.disconnect();
+          activeObserver = null;
           setTimeout(() => {
             executeInjection(foundContainer, settings);
           }, 100);
@@ -385,9 +396,21 @@ function runFrameEgo() {
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    activeObserver.observe(document.body, { childList: true, subtree: true });
   });
 }
+
+// Initial Run
+runFrameEgo();
+
+// Listen for SPA navigation signal
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === 'REINIT_EGO') {
+    console.info("Frame.ego: Navigation detected. Resetting injection state.");
+    injected = false;
+    runFrameEgo();
+  }
+});
 const dataset = {}; // Store timer
 
 // Stores valid HTML templates for the checkbox states
