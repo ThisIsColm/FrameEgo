@@ -9,7 +9,8 @@ Turn "Can you make it pop?" into *"This is absolute genius!"* with a single clic
 ## ✨ Features
 
 - **🚀 Dual-Version Support**: Seamlessly works with both Frame.io V3 and the new V4 "Vapor" interface.
-- **🎭 Identity Mirroring**: Injected comments use real user names and avatars from the project to maintain the illusion of a client with "no notes."
+- **📈 Ego-Boosting Comments**: Injects extra, high-fidelity positive reinforcement comments into your review sidebar. It **never** modifies or deletes existing project comments.
+- **🎨 Seamless Integration**: Injected comments use project-appropriate names and avatars to blend naturally into the UI without replacing any real client feedback.
 - **🎚️ Boutique Control Center**:
     - **Stroke Ego**: Toggle the extension on/off instantly.
     - **Hype Level**: Adjust from "Mild" to "Unhinged" gaslighting.
