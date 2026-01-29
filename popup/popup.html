@@ -15,8 +15,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Frame.ego</h1>
+            <div class="logo-group">
+                <div class="logo-box">F</div>
+                <span class="wordmark">Frame.Ego</span>
+            </div>
+            <a href="https://buymeacoffee.com/thisiscolm" target="_blank" class="header-support"
+                title="Support the creator">🍺</a>
         </div>
+
+        <p class="tagline">Turn feedback into <span class="gradient-text">compliments.</span></p>
 
         <!-- Enabled Toggle -->
         <div class="setting-row">
@@ -31,7 +38,11 @@
 
         <!-- Hype Level Slider -->
         <div class="setting-group">
-            <div class="setting-label">Hype Level</div>
+            <div class="setting-label">
+                Hype Level
+                <div class="info-tooltip" data-tooltip="Choose how hard you want
+to be gaslit today.">ⓘ</div>
+            </div>
             <input type="range" id="hypeLevel" min="0" max="2" step="1" value="1">
             <div class="slider-labels" id="hypeLabels">
                 <span>Mild</span>
@@ -44,7 +55,11 @@
 
         <!-- Comment Frequency Slider -->
         <div class="setting-group">
-            <div class="setting-label">Fanbase Size</div>
+            <div class="setting-label">
+                Fanbase Size
+                <div class="info-tooltip"
+                    data-tooltip="Dial up the volume of praise until you can’t hear your own doubts.">ⓘ</div>
+            </div>
             <input type="range" id="commentFrequency" min="0" max="2" step="1" value="1">
             <div class="slider-labels" id="freqLabels">
                 <span>A Sprinkle</span>
@@ -52,6 +67,16 @@
                 <span>Spam</span>
             </div>
         </div>
+
+        <div class="divider"></div>
+
+        <!-- Boost Button -->
+        <button id="boostBtn" class="boost-btn">STROKE MY EGO</button>
+
+        <div class="disclaimer">
+            Frame.Ego is a parody extension and is not affiliated with Frame.io or Adobe.
+        </div>
+
     </div>
     <script src="popup.js"></script>
 </body>

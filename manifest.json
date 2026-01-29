@@ -2,14 +2,15 @@
   "manifest_version": 3,
   "name": "Frame.ego",
   "version": "1.0",
-  "description": "Injects positive reinforcement comments into Frame.io V3 reviews.",
+  "description": "Injects positive reinforcement comments into Frame.io V3 and V4 reviews.",
   "permissions": [
     "storage"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://app.frame.io/*"
+        "https://app.frame.io/*",
+        "https://next.frame.io/*"
       ],
       "js": [
         "content.js"
@@ -21,7 +22,8 @@
     }
   ],
   "host_permissions": [
-    "https://app.frame.io/*"
+    "https://app.frame.io/*",
+    "https://next.frame.io/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",

@@ -211,31 +211,85 @@ const userConfig = {
   // Ratio will be determined by settings
 };
 
-// Selectors provided by user
-// Using partial match [class*="..."] to be more robust against minor hash changes if they occur,
-// but sticking close to the provided structure.
-const Selectors = {
-  // Container logic is now handled dynamically in runFrameEgo.
-  // We keep this object for general config.
+// ==========================================
+// VERSION DETECTION & DUAL SELECTOR SYSTEM
+// ==========================================
 
-  // Classes for harvesting and cloning
+// V3 Selectors (existing Frame.io interface)
+const SelectorsV3 = {
   avatarContainer: '[class*="CommentHeader__AvatarContainer"]',
   userName: '[class*="CommentHeader__UserName"]',
   commentBodyWrapper: '[class*="CommentTextContainer__Wrapper"]',
   timestampWrapper: '[class*="CommentTextContainer__TimestampWrapper"]',
-  commentCard: '[class*="Comment__StyledComment"]', // Added this selector
+  commentCard: '[class*="Comment__StyledComment"]',
 
-  // Specific full class names for creating new elements (to ensure styles apply)
-  // We use the exact classes provided by the user.
   classes: {
     avatarContainer: "CommentHeader__AvatarContainer-qf7yeb-0 beNsac",
     userName: "CommentHeader__UserName-qf7yeb-1 DCIhe",
     commentBodyWrapper: "CommentTextContainer__Wrapper-sc-10cr1gs-4 gUNTZt",
     timestampWrapper: "CommentTextContainer__TimestampWrapper-sc-10cr1gs-2 iHdyJh",
-    // Inferring some structure based on typical React styled components found
     cardRoot: "frame-ego-comment"
   }
 };
+
+// V4 Selectors (redesigned Frame.io interface - Vapor design system)
+// Extracted from actual V4 DOM provided by user
+const SelectorsV4 = {
+  // V4 uses data-testid attributes and Vapor styled-components
+  avatarContainer: '[data-testid="avatar-container"]',
+  userName: '.sc-d1fcb33f-0 .StyledText-vapor__sc-3ie3rc-0.jgHjfl',
+  commentBodyWrapper: '.sc-d7664fd0-0', // Contains timestamp + message
+  timestampWrapper: '[data-testid="comment-prefix-timestamp"]',
+  commentCard: '.comment-cell[data-testid^="comment-cell-"]',
+
+  // Additional V4-specific selectors
+  relativeTime: '.sc-d1fcb33f-0 .StyledText-vapor__sc-3ie3rc-0.dEuzsu', // "5mo" style
+  messageBody: '.sc-d7664fd0-1.herJYM .StyledText-vapor__sc-3ie3rc-0',
+  completeButton: '[data-testid="comment-marked-as-complete"]',
+  commentContainer: '[data-testid="comment-tab-container"]',
+  commentList: '.sc-b4b8f871-0', // The grid role container
+
+  classes: {
+    avatarContainer: "StyledAvatarContainer-vapor__sc-hep5ij-1 kdMbj",
+    userName: "StyledText-vapor__sc-3ie3rc-0 jgHjfl",
+    commentBodyWrapper: "sc-d7664fd0-0 Wfsvx",
+    timestampWrapper: "StyledText-vapor__sc-3ie3rc-0 hvWGTh sc-f79c1596-2 dZJDkS",
+    relativeTime: "StyledText-vapor__sc-3ie3rc-0 dEuzsu",
+    messageBody: "StyledText-vapor__sc-3ie3rc-0 gcSmcv",
+    cardRoot: "frame-ego-comment-v4"
+  }
+};
+
+// Detect which version of Frame.io we're on
+function detectFrameVersion() {
+  // V3 indicator: styled-components with "CommentHeader__" prefix
+  const v3Indicator = document.querySelector('[class*="CommentHeader__"]');
+
+  // V4 indicator: Vapor design system and data-testid attributes
+  const v4Indicator = document.querySelector('[data-testid="comment-tab-container"]') ||
+    document.querySelector('.comment-cell[data-testid^="comment-cell-"]') ||
+    document.querySelector('[class*="-vapor__sc-"]');
+
+  // If we find V3 styled-components, it's V3
+  if (v3Indicator) {
+    console.info("Frame.ego: Detected Frame.io V3 interface");
+    return 'v3';
+  }
+
+  // If we find V4 patterns but no V3, it's V4
+  if (v4Indicator && !v3Indicator) {
+    console.info("Frame.ego: Detected Frame.io V4 interface");
+    return 'v4';
+  }
+
+  // Default to V3 for backward compatibility
+  console.info("Frame.ego: Version unclear, defaulting to V3");
+  return 'v3';
+}
+
+// Active selectors - will be set based on detected version
+let Selectors = SelectorsV3;
+let detectedVersion = 'v3';
 
 let injected = false;
 
@@ -255,28 +309,73 @@ function runFrameEgo() {
 
     console.info(`Frame.ego: Enabled. Settings: Hype=${settings.hypeLevel}, Freq=${settings.commentFrequency}`);
 
-    // 1. Observe for Comment Container
+    // Observe for Comment Container
     const observer = new MutationObserver((mutations, obs) => {
       if (injected) return;
 
-      // Robust Discovery
-      const indicator = document.querySelector(Selectors.avatarContainer);
-      if (indicator) {
-        let candidate = indicator;
-        let foundContainer = null;
-        for (let i = 0; i < 10; i++) {
-          if (!candidate.parentElement) break;
-          candidate = candidate.parentElement;
-          if (candidate.querySelector(Selectors.commentCard)) {
-            foundContainer = candidate;
-          }
+      // Always try to detect version first
+      const newVersion = detectFrameVersion();
+      if (newVersion !== detectedVersion) {
+        detectedVersion = newVersion;
+        Selectors = detectedVersion === 'v4' ? SelectorsV4 : SelectorsV3;
+        console.info(`Frame.ego: Switched to ${detectedVersion.toUpperCase()} selectors`);
+      }
+
+      // Now query using the CURRENT (possibly updated) selectors
+      let indicator = document.querySelector(Selectors.avatarContainer);
+
+      // Additional fallback: if still nothing found, try V4 explicitly
+      if (!indicator) {
+        const v4Check = document.querySelector('[data-testid="avatar-container"]');
+        if (v4Check) {
+          detectedVersion = 'v4';
+          Selectors = SelectorsV4;
+          indicator = v4Check;
+          console.info("Frame.ego: Force-switched to V4 (found avatar-container)");
         }
-        if (!foundContainer && indicator) {
-          foundContainer = indicator.parentElement?.parentElement?.parentElement?.parentElement;
+      }
+
+      if (indicator) {
+        // Find the comment container - different strategies for V3 vs V4
+        let foundContainer = null;
+
+        if (detectedVersion === 'v4') {
+          // V4: Look for the comment-tab-container or scrollable list
+          foundContainer = document.querySelector('[data-testid="comment-tab-container"]') ||
+            document.querySelector('#comment-tab-container') ||
+            document.querySelector('.sc-b15ab202-0');
+
+          // If still not found, walk up from indicator
+          if (!foundContainer) {
+            let candidate = indicator;
+            for (let i = 0; i < 15; i++) {
+              if (!candidate.parentElement) break;
+              candidate = candidate.parentElement;
+              if (candidate.querySelector('.comment-cell') ||
+                candidate.id === 'comment-tab-container' ||
+                candidate.getAttribute('data-testid') === 'comment-tab-container') {
+                foundContainer = candidate;
+                break;
+              }
+            }
+          }
+        } else {
+          // V3: Walk up to find container with comment cards
+          let candidate = indicator;
+          for (let i = 0; i < 10; i++) {
+            if (!candidate.parentElement) break;
+            candidate = candidate.parentElement;
+            if (candidate.querySelector(Selectors.commentCard)) {
+              foundContainer = candidate;
+            }
+          }
+          if (!foundContainer) {
+            foundContainer = indicator.parentElement?.parentElement?.parentElement?.parentElement;
+          }
         }
 
         if (foundContainer && foundContainer instanceof HTMLElement) {
-          console.info("Frame.ego: Comment container found via robust search.");
+          console.info(`Frame.ego: Comment container found (${detectedVersion.toUpperCase()} mode)`);
           injected = true;
           obs.disconnect();
           setTimeout(() => {
@@ -376,31 +475,58 @@ function harvestComponents(container) {
 
 function harvestIdentities(container) {
   const uniqueIdentities = new Map();
-  const foundTimestamps = []; // Harvest relative times e.g. "2d", "14m"
+  const foundTimestamps = []; // Harvest relative times e.g. "2d", "14m", "5mo"
+  const isV4 = detectedVersion === 'v4';
 
-  // Find all existing avatars/names
+  // Find all existing avatars/names - V4 uses different selectors
   const avatars = container.querySelectorAll(Selectors.avatarContainer);
-  const names = container.querySelectorAll(Selectors.userName);
 
-  // Iterate and pair them up (assuming sequential order matches, which is typical)
+  // For V4, names are in a specific location
+  let names;
+  if (isV4) {
+    // V4: Get names from the header spans
+    names = container.querySelectorAll('.sc-d1fcb33f-0 .StyledText-vapor__sc-3ie3rc-0.jgHjfl');
+  } else {
+    names = container.querySelectorAll(Selectors.userName);
+  }
+
+  console.info(`Frame.ego: Found ${avatars.length} avatars and ${names.length} names to harvest`);
+
+  // Iterate and pair them up
   for (let i = 0; i < avatars.length; i++) {
-    const avatarImg = avatars[i].querySelector('img');
+    let avatarSrc = null;
     const nameEl = names[i];
 
-    if (avatarImg && nameEl) {
-      const src = avatarImg.src;
-      const name = nameEl.textContent;
+    if (isV4) {
+      // V4: Avatar is SVG with nested <image> tag
+      const svgImage = avatars[i].querySelector('image');
+      if (svgImage) {
+        avatarSrc = svgImage.getAttribute('href') || svgImage.getAttribute('xlink:href');
+      }
+    } else {
+      // V3: Avatar uses <img> tag
+      const avatarImg = avatars[i].querySelector('img');
+      if (avatarImg) {
+        avatarSrc = avatarImg.src;
+      }
+    }
+
+    if (nameEl) {
+      const name = nameEl.textContent.trim();
 
       // Use name as key to ensure uniqueness
-      if (!uniqueIdentities.has(name)) {
-        uniqueIdentities.set(name, { name, avatarUrl: src });
+      if (name && !uniqueIdentities.has(name)) {
+        uniqueIdentities.set(name, {
+          name,
+          avatarUrl: avatarSrc || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+        });
       }
 
-      // Harvest Timestamp: Look for sibling of name that matches time format
-      const header = nameEl.parentElement;
+      // Harvest Timestamp: Look for sibling relative time (e.g., "5mo", "2d")
+      const header = nameEl.closest('.sc-d1fcb33f-0') || nameEl.parentElement;
       if (header) {
-        const timeEl = Array.from(header.querySelectorAll('span, div'))
-          .find(el => el.textContent.trim().match(/^(\d+[smhdwy]|Just now)$/));
+        const timeEl = Array.from(header.querySelectorAll('span'))
+          .find(el => el !== nameEl && el.textContent.trim().match(/^(\d+[smhdwy]o?|Just now)$/i));
         if (timeEl) {
           foundTimestamps.push(timeEl.textContent.trim());
         }
@@ -459,7 +585,9 @@ function generateComments(data, realCount, settings) {
     // Pick unique message if available, else fallback to random
     const msg = availableMessages[i] || messageBank[Math.floor(Math.random() * messageBank.length)];
 
-    const identity = identities[Math.floor(Math.random() * identities.length)];
+    // ONLY use fake identities - never real names
+    const fakeIdentities = userConfig.extraIdentities.length > 0 ? userConfig.extraIdentities : [userConfig.defaultIdentity];
+    const identity = fakeIdentities[Math.floor(Math.random() * fakeIdentities.length)];
     const time = ["00:15", "01:30", "02:45", "10:22", "00:05"][Math.floor(Math.random() * 5)];
 
     // Pick a relative time from harvested list, or fallback
@@ -477,199 +605,238 @@ function generateComments(data, realCount, settings) {
 }
 
 function renderAndAppend(container, comments) {
-  // CLONING STRATEGY CORRECTION:
-  // Instead of cloning container.lastElementChild (which might be the entire list wrapper!),
-  // we specifically look for a 'Comment__StyledComment' and clone its PARENT wrapper.
+  // Version-aware comment rendering
+  const isV4 = detectedVersion === 'v4';
 
   let referenceNode = null;
+  let referenceWrapper = null; // V4: the wrapper with transform
   const innerCard = container.querySelector(Selectors.commentCard);
 
   if (innerCard) {
-    referenceNode = innerCard.parentNode; // Usually the 'div' wrapper around the styled component
+    if (isV4) {
+      // V4: Clone the PARENT wrapper (has transform: translate3d positioning)
+      referenceNode = innerCard;
+      referenceWrapper = innerCard.parentElement; // The sc-671f3bb0-3 wrapper
+    } else {
+      // V3: We need the parent of the styled comment
+      referenceNode = innerCard.parentNode;
+    }
   }
 
-  let useCloning = (referenceNode && referenceNode.querySelector(Selectors.userName));
+  // Verify we found a valid template
+  const usernameSelector = isV4 ? SelectorsV4.userName : Selectors.userName;
+  let useCloning = (referenceNode && referenceNode.querySelector(usernameSelector));
 
-  // If we found a node, verification involves checking if it has a username inside
   if (useCloning) {
-    console.info("Frame.ego: Found valid comment template to clone.");
+    console.info(`Frame.ego: Found valid ${isV4 ? 'V4' : 'V3'} comment template to clone.`);
   } else {
     console.warn("Frame.ego: Could not find valid template. Fallback to manual.");
   }
-
-  const fragment = document.createDocumentFragment();
 
   comments.forEach(comment => {
     let commentEl;
 
     if (useCloning) {
-      commentEl = referenceNode.cloneNode(true); // Clone JUST the single comment wrapper
+      commentEl = referenceNode.cloneNode(true);
 
+      if (isV4) {
+        // ========== V4 RENDERING ==========
 
-      // 1. Update Name
-      const nameNode = commentEl.querySelector(Selectors.userName);
-      if (nameNode) nameNode.textContent = comment.identity.name;
-
-      // 2. Update Avatar (Initials instead of Image)
-      const avatarContainer = commentEl.querySelector(Selectors.avatarContainer);
-      if (avatarContainer) {
-        // Clear children (remove img tag if it exists in the clone)
-        avatarContainer.innerHTML = '';
-
-        // Style as initial circle
-        avatarContainer.innerText = comment.identity.name.charAt(0).toUpperCase();
-        avatarContainer.style.display = 'flex';
-        avatarContainer.style.alignItems = 'center';
-        avatarContainer.style.justifyContent = 'center';
-        // Pick a consistent random color based on char code sum
-        const colors = ['#FF5733', '#3357FF', '#F333FF', '#33FFF5', '#F5FF33', '#FFA533', '#33FF57']; // Expanded palette
-        let charSum = 0;
-        for (let i = 0; i < comment.identity.name.length; i++) {
-          charSum += comment.identity.name.charCodeAt(i);
+        // 1. Update Name
+        const nameNode = commentEl.querySelector('.StyledText-vapor__sc-3ie3rc-0.jgHjfl');
+        if (nameNode) {
+          // Clear any nested spans and set the name
+          nameNode.innerHTML = `<span><span class="">${comment.identity.name}</span></span>`;
         }
-        const colorIndex = charSum % colors.length;
-        avatarContainer.style.backgroundColor = colors[colorIndex];
 
-        avatarContainer.style.color = '#FFFFFF';
-        avatarContainer.style.fontFamily = 'sans-serif'; // Safe default
-        avatarContainer.style.fontWeight = 'bold';
-        avatarContainer.style.fontSize = '11px';
-        avatarContainer.style.borderRadius = '50%';
+        // 2. Update Avatar (Initials instead of Image)
+        const avatarContainer = commentEl.querySelector('[data-testid="avatar-container"]');
+        if (avatarContainer) {
+          // V4 avatar uses SVG - replace with initial circle
+          avatarContainer.innerHTML = '';
+          avatarContainer.style.display = 'flex';
+          avatarContainer.style.alignItems = 'center';
+          avatarContainer.style.justifyContent = 'center';
 
-        // Fix shape issues
-        avatarContainer.style.width = '24px';
-        avatarContainer.style.height = '24px';
-        avatarContainer.style.minWidth = '24px'; // Prevent squishing
-        avatarContainer.style.minHeight = '24px';
-        avatarContainer.style.flexShrink = '0';
-        avatarContainer.style.padding = '1px 0 0 0'; // Slight nudge down
-        avatarContainer.style.lineHeight = '1';
-        avatarContainer.style.boxSizing = 'border-box';
-      }
+          const colors = ['#FF5733', '#3357FF', '#F333FF', '#33FFF5', '#F5FF33', '#FFA533', '#33FF57'];
+          let charSum = 0;
+          for (let i = 0; i < comment.identity.name.length; i++) {
+            charSum += comment.identity.name.charCodeAt(i);
+          }
+          avatarContainer.style.backgroundColor = colors[charSum % colors.length];
+          avatarContainer.style.color = '#FFFFFF';
+          avatarContainer.style.fontWeight = 'bold';
+          avatarContainer.style.fontSize = '11px';
+          avatarContainer.style.borderRadius = '50%';
+          avatarContainer.style.width = '24px';
+          avatarContainer.style.height = '24px';
+          avatarContainer.innerText = comment.identity.name.charAt(0).toUpperCase();
+        }
 
-      // 3. Update Checkbox -> Force Unchecked & Interactive
-      const completeBtn = commentEl.querySelector('button[data-complete-comment-btn="true"]');
-      if (completeBtn && checkboxTemplates.unchecked) {
-        // Force visual state to unchecked
-        completeBtn.innerHTML = checkboxTemplates.unchecked;
+        // 3. Update Relative Time (e.g., "5mo")
+        const relTimeNode = commentEl.querySelector('.sc-d1fcb33f-0 .StyledText-vapor__sc-3ie3rc-0.dEuzsu');
+        if (relTimeNode) relTimeNode.textContent = comment.relativeTime;
 
-        // Make interactive (fake toggle)
-        // We need simple behavior: click -> swap innerHTML to checked/unchecked
-        completeBtn.style.cursor = "pointer";
-        completeBtn.onclick = (e) => {
-          e.stopPropagation(); // Stop bubbling
-          e.preventDefault();
+        // 4. Update Timecode Timestamp
+        const timecodeNode = commentEl.querySelector('[data-testid="comment-prefix-timestamp"]');
+        if (timecodeNode) timecodeNode.textContent = comment.timestamp;
 
-          // Check current state by looking for specific classes in innerHTML
-          // or just toggle a flag on the element
-          // SAFEGUARD for crash: check if dataset exists, although element existence check handles most cases.
-          const isCurrentlyChecked = completeBtn.dataset && completeBtn.dataset.fakeChecked === "true";
+        // 5. Update Message Body
+        const messageNode = commentEl.querySelector('.sc-d7664fd0-1.herJYM .StyledText-vapor__sc-3ie3rc-0');
+        if (messageNode) {
+          messageNode.textContent = comment.message;
+        } else {
+          // Fallback: find the message wrapper and update
+          const messageWrapper = commentEl.querySelector('.sc-d7664fd0-1.herJYM');
+          if (messageWrapper) {
+            messageWrapper.innerHTML = `<span class="StyledText-vapor__sc-3ie3rc-0 gcSmcv">${comment.message}</span>`;
+          }
+        }
 
-          if (isCurrentlyChecked) {
-            completeBtn.innerHTML = checkboxTemplates.unchecked;
-            if (completeBtn.dataset) completeBtn.dataset.fakeChecked = "false";
-          } else {
-            // Only toggle if we have a checked template
-            if (checkboxTemplates.checked) {
+        // 6. Update Complete Button (force unchecked state)
+        const completeBtn = commentEl.querySelector('[data-testid="comment-marked-as-complete"]');
+        if (completeBtn) {
+          completeBtn.dataset.selected = 'false';
+          // Make interactive
+          completeBtn.onclick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const isChecked = completeBtn.dataset.selected === 'true';
+            completeBtn.dataset.selected = isChecked ? 'false' : 'true';
+          };
+        }
+
+        // 7. Update IDs to avoid duplicates
+        const cellId = 'frame-ego-' + Math.random().toString(36).substr(2, 9);
+        commentEl.id = cellId;
+        commentEl.dataset.testid = `comment-cell-${cellId}`;
+
+      } else {
+        // ========== V3 RENDERING (existing logic) ==========
+
+        // 1. Update Name
+        const nameNode = commentEl.querySelector(Selectors.userName);
+        if (nameNode) nameNode.textContent = comment.identity.name;
+
+        // 2. Update Avatar
+        const avatarContainer = commentEl.querySelector(Selectors.avatarContainer);
+        if (avatarContainer) {
+          avatarContainer.innerHTML = '';
+          avatarContainer.innerText = comment.identity.name.charAt(0).toUpperCase();
+          avatarContainer.style.display = 'flex';
+          avatarContainer.style.alignItems = 'center';
+          avatarContainer.style.justifyContent = 'center';
+          const colors = ['#FF5733', '#3357FF', '#F333FF', '#33FFF5', '#F5FF33', '#FFA533', '#33FF57'];
+          let charSum = 0;
+          for (let i = 0; i < comment.identity.name.length; i++) {
+            charSum += comment.identity.name.charCodeAt(i);
+          }
+          avatarContainer.style.backgroundColor = colors[charSum % colors.length];
+          avatarContainer.style.color = '#FFFFFF';
+          avatarContainer.style.fontFamily = 'sans-serif';
+          avatarContainer.style.fontWeight = 'bold';
+          avatarContainer.style.fontSize = '11px';
+          avatarContainer.style.borderRadius = '50%';
+          avatarContainer.style.width = '24px';
+          avatarContainer.style.height = '24px';
+          avatarContainer.style.minWidth = '24px';
+          avatarContainer.style.minHeight = '24px';
+          avatarContainer.style.flexShrink = '0';
+          avatarContainer.style.padding = '1px 0 0 0';
+          avatarContainer.style.lineHeight = '1';
+          avatarContainer.style.boxSizing = 'border-box';
+        }
+
+        // 3. Update Checkbox
+        const completeBtn = commentEl.querySelector('button[data-complete-comment-btn="true"]');
+        if (completeBtn && checkboxTemplates.unchecked) {
+          completeBtn.innerHTML = checkboxTemplates.unchecked;
+          completeBtn.style.cursor = "pointer";
+          completeBtn.onclick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const isCurrentlyChecked = completeBtn.dataset && completeBtn.dataset.fakeChecked === "true";
+            if (isCurrentlyChecked) {
+              completeBtn.innerHTML = checkboxTemplates.unchecked;
+              if (completeBtn.dataset) completeBtn.dataset.fakeChecked = "false";
+            } else if (checkboxTemplates.checked) {
               completeBtn.innerHTML = checkboxTemplates.checked;
               if (completeBtn.dataset) completeBtn.dataset.fakeChecked = "true";
             }
-          }
-        };
-      }
-
-      // 4. Update Body Message & Timestamp
-      // Refined Strategy: Respect the Sibling Structure [TimestampWrapper] + [TextWrapper] found in the HTML.
-
-      const bodyWrapper = commentEl.querySelector(Selectors.commentBodyWrapper);
-
-      if (bodyWrapper) {
-        // A. Update Timestamp
-        // The timestamp is deeply nested: Wrapper -> TimestampWrapper -> Timestamp
-        // We look for the specific inner class "CommentTextContainer__Timestamp" first, or fallback to the wrapper
-        const timestampInner = bodyWrapper.querySelector('[class*="CommentTextContainer__Timestamp-"]');
-        const timestampWrapper = bodyWrapper.querySelector(Selectors.timestampWrapper);
-
-        if (timestampInner) {
-          timestampInner.textContent = comment.timestamp;
-        } else if (timestampWrapper) {
-          timestampWrapper.textContent = comment.timestamp;
+          };
         }
 
-        // B. Update Message
-        // The message is inside: Wrapper -> TextWrapper -> StyledSanitizedInnerHTML
-        // We try to find the deepest container to maintain all font styles.
-        const textWrapper = bodyWrapper.querySelector('[class*="CommentTextContainer__Text"]');
-        const formattedInner = bodyWrapper.querySelector('[class*="FormattedComment__StyledSanitizedInnerHTML"]');
+        // 4. Update Body Message & Timestamp
+        const bodyWrapper = commentEl.querySelector(Selectors.commentBodyWrapper);
+        if (bodyWrapper) {
+          const timestampInner = bodyWrapper.querySelector('[class*="CommentTextContainer__Timestamp-"]');
+          const timestampWrapper = bodyWrapper.querySelector(Selectors.timestampWrapper);
+          if (timestampInner) timestampInner.textContent = comment.timestamp;
+          else if (timestampWrapper) timestampWrapper.textContent = comment.timestamp;
 
-        if (formattedInner) {
-          formattedInner.textContent = comment.message;
-        } else if (textWrapper) {
-          textWrapper.textContent = comment.message;
-        } else {
-          // Fallback if structure is different than expected (e.g. text node directly in wrapper)
-          // We must be careful not to kill the timestamp if it's a sibling in the same wrapper
-
-          // 1. Get the timestamp node (element) to preserve
-          const tsNode = timestampWrapper || timestampInner;
-
-          if (tsNode && bodyWrapper.contains(tsNode)) {
-            // Remove everything EXCEPT the timestamp wrapper tree
-            Array.from(bodyWrapper.childNodes).forEach(child => {
-              if (!child.contains(tsNode) && child !== tsNode) {
-                child.remove();
-              }
-            });
-            // Create valid structure if missing
-            const newTextSpan = document.createElement('span');
-            newTextSpan.className = "CommentTextContainer__Text-sc-10cr1gs-3 cXKCxs"; // Attempt to use discovered class
-            newTextSpan.textContent = comment.message;
-            bodyWrapper.appendChild(newTextSpan);
-          } else {
-            bodyWrapper.textContent = comment.message;
+          const textWrapper = bodyWrapper.querySelector('[class*="CommentTextContainer__Text"]');
+          const formattedInner = bodyWrapper.querySelector('[class*="FormattedComment__StyledSanitizedInnerHTML"]');
+          if (formattedInner) formattedInner.textContent = comment.message;
+          else if (textWrapper) textWrapper.textContent = comment.message;
+          else {
+            const tsNode = timestampWrapper || timestampInner;
+            if (tsNode && bodyWrapper.contains(tsNode)) {
+              Array.from(bodyWrapper.childNodes).forEach(child => {
+                if (!child.contains(tsNode) && child !== tsNode) child.remove();
+              });
+              const newTextSpan = document.createElement('span');
+              newTextSpan.className = "CommentTextContainer__Text-sc-10cr1gs-3 cXKCxs";
+              newTextSpan.textContent = comment.message;
+              bodyWrapper.appendChild(newTextSpan);
+            } else {
+              bodyWrapper.textContent = comment.message;
+            }
           }
         }
-      }
 
-      // 5. Update Relative Time (e.g., "2d" -> "Just now")
-      const header = nameNode ? nameNode.parentElement : null;
-      if (header) {
-        const possibleRelativeTime = Array.from(header.querySelectorAll('span, div'))
-          .find(el => el.textContent.match(/^\d+[smhd]$/) || el.textContent.includes('ago') || el.textContent === 'Just now');
-        if (possibleRelativeTime) {
-          possibleRelativeTime.textContent = comment.relativeTime;
-          // Apply exact styles requested by user
-          possibleRelativeTime.style.fontFamily = "Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif";
-          possibleRelativeTime.style.fontSize = "13px";
-          possibleRelativeTime.style.lineHeight = "1.5";
-          possibleRelativeTime.style.color = "rgb(125, 130, 156)";
-          possibleRelativeTime.style.fontWeight = "bold";
-          possibleRelativeTime.style.marginLeft = "5px";
-          possibleRelativeTime.style.opacity = "1";
-          possibleRelativeTime.style.webkitTextSizeAdjust = "100%";
-          possibleRelativeTime.style.userSelect = "none";
-          possibleRelativeTime.style.webkitTapHighlightColor = "transparent";
+        // 5. Update Relative Time
+        const header = nameNode ? nameNode.parentElement : null;
+        if (header) {
+          const possibleRelativeTime = Array.from(header.querySelectorAll('span, div'))
+            .find(el => el.textContent.match(/^\d+[smhd]$/) || el.textContent.includes('ago') || el.textContent === 'Just now');
+          if (possibleRelativeTime) {
+            possibleRelativeTime.textContent = comment.relativeTime;
+            possibleRelativeTime.style.fontFamily = "Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif";
+            possibleRelativeTime.style.fontSize = "13px";
+            possibleRelativeTime.style.lineHeight = "1.5";
+            possibleRelativeTime.style.color = "rgb(125, 130, 156)";
+            possibleRelativeTime.style.fontWeight = "bold";
+            possibleRelativeTime.style.marginLeft = "5px";
+          }
         }
       }
 
     } else {
-      // Fallback: Construct blindly
+      // Fallback: Construct manually (works for both versions)
       commentEl = document.createElement('div');
       commentEl.style.display = "flex";
       commentEl.style.padding = "10px";
-      commentEl.className = "FrameEgo_FakeComment";
+      commentEl.className = isV4 ? "comment-cell frame-ego-injected" : "FrameEgo_FakeComment";
+
+      const initial = comment.identity.name.charAt(0).toUpperCase();
+      const colors = ['#FF5733', '#3357FF', '#F333FF', '#33FFF5', '#F5FF33', '#FFA533', '#33FF57'];
+      let charSum = 0;
+      for (let i = 0; i < comment.identity.name.length; i++) {
+        charSum += comment.identity.name.charCodeAt(i);
+      }
+      const bgColor = colors[charSum % colors.length];
 
       commentEl.innerHTML = `
-        <div class="${Selectors.classes.avatarContainer}">
-            <img src="${comment.identity.avatarUrl}" style="width: 32px; height: 32px; border-radius: 50%;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background-color: ${bgColor}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; flex-shrink: 0;">
+            ${initial}
         </div>
         <div style="margin-left: 10px; flex: 1;">
             <div style="display: flex; align-items: baseline;">
-                 <span class="${Selectors.classes.userName}" style="font-weight: bold; color: white;">${comment.identity.name}</span>
-                 <span style="margin-left: 5px; font-size: 13px; color: rgb(125, 130, 156); font-weight: bold; font-family: Avenir Next, Helvetica Neue, Helvetica, Arial, sans-serif; line-height: 1.5; -webkit-text-size-adjust: 100%; user-select: none;">${comment.relativeTime}</span>
+                 <span style="font-weight: bold; color: white;">${comment.identity.name}</span>
+                 <span style="margin-left: 5px; font-size: 13px; color: rgb(125, 130, 156); font-weight: bold;">${comment.relativeTime}</span>
             </div>
-            <div class="${Selectors.classes.commentBodyWrapper}" style="margin-top: 4px;">
-                <span class="${Selectors.classes.timestampWrapper}" style="color: #5E96F6; font-weight: bold; margin-right: 6px; cursor: pointer;">${comment.timestamp}</span>
+            <div style="margin-top: 4px;">
+                <span style="color: #5E96F6; font-weight: bold; margin-right: 6px; cursor: pointer;">${comment.timestamp}</span>
                 <span style="color: #ddd;">${comment.message}</span>
             </div>
         </div>
@@ -678,23 +845,153 @@ function renderAndAppend(container, comments) {
 
     commentEl.classList.add('frame-ego-injected');
 
-    // MIXING LOGIC: Insert randomly among existing children
+    // Determine the target container for insertion
+    let targetContainer;
+    if (isV4) {
+      // V4: Keep real comments intact, insert fake comments at random positions
+      const virtualizedList = container.querySelector('.sc-671f3bb0-0') ||
+        container.querySelector('[role="grid"]');
 
-    // Determine the true list container.
-    // If we have a referenceNode (a comment wrapper), its parent is likely the list.
-    // If NOT, we fallback to the main container.
-    const targetContainer = (referenceNode && referenceNode.parentNode) ? referenceNode.parentNode : container;
+      if (virtualizedList && !virtualizedList.dataset.frameEgoMixed) {
+        // First: Convert real comments from transform to normal flow (keep original elements!)
+        const realWrappers = Array.from(virtualizedList.querySelectorAll('[style*="translate3d"]'));
+        realWrappers.sort((a, b) => {
+          const matchA = a.style.transform.match(/translate3d\([^,]+,\s*([0-9.]+)px/);
+          const matchB = b.style.transform.match(/translate3d\([^,]+,\s*([0-9.]+)px/);
+          return (matchA ? parseFloat(matchA[1]) : 0) - (matchB ? parseFloat(matchB[1]) : 0);
+        });
 
-    const currentChildren = targetContainer.children;
-    // We can pick any index from 0 to currentChildren.length.
-    // If we pick currentChildren.length, it appends to the end.
-    const randomIdx = Math.floor(Math.random() * (currentChildren.length + 1));
-    const referenceChild = currentChildren[randomIdx] || null;
+        // Convert each REAL element to normal flow (no cloning - keeps event handlers!)
+        // Don't add margin-top - let native CSS handle spacing
+        realWrappers.forEach((wrapper, index) => {
+          wrapper.style.position = 'relative';
+          wrapper.style.transform = 'none';
+          // Only first item needs no margin, rest handled by native CSS
+        });
+        virtualizedList.style.height = 'auto';
 
-    targetContainer.insertBefore(commentEl, referenceChild);
+        // Create and insert fake comments at random positions
+        comments.forEach(comment => {
+          const fakeEl = referenceNode.cloneNode(true);
+
+          // Update name
+          const nameNode = fakeEl.querySelector('.StyledText-vapor__sc-3ie3rc-0.jgHjfl');
+          if (nameNode) nameNode.innerHTML = `<span><span class="">${comment.identity.name}</span></span>`;
+
+          // Update avatar
+          const avatarContainer = fakeEl.querySelector('[data-testid="avatar-container"]');
+          if (avatarContainer) {
+            avatarContainer.innerHTML = '';
+            avatarContainer.style.cssText = 'display:flex;align-items:center;justify-content:center;border-radius:50%;width:24px;height:24px;font-weight:bold;font-size:11px;color:#fff;';
+            const colors = ['#FF5733', '#3357FF', '#F333FF', '#33FFF5', '#F5FF33', '#FFA533', '#33FF57'];
+            let charSum = 0;
+            for (let c of comment.identity.name) charSum += c.charCodeAt(0);
+            avatarContainer.style.backgroundColor = colors[charSum % colors.length];
+            avatarContainer.innerText = comment.identity.name.charAt(0).toUpperCase();
+          }
+
+          // Update timestamps
+          const relTimeNode = fakeEl.querySelector('.sc-d1fcb33f-0 .StyledText-vapor__sc-3ie3rc-0.dEuzsu');
+          if (relTimeNode) relTimeNode.textContent = comment.relativeTime;
+
+          const timecodeNode = fakeEl.querySelector('[data-testid="comment-prefix-timestamp"]');
+          if (timecodeNode) timecodeNode.textContent = comment.timestamp;
+
+          // Update message
+          const messageNode = fakeEl.querySelector('.sc-d7664fd0-1 .StyledText-vapor__sc-3ie3rc-0');
+          if (messageNode) messageNode.textContent = comment.message;
+
+          // Set checkmark to unchecked and make it clickable
+          const completeBtn = fakeEl.querySelector('[data-testid="comment-marked-as-complete"]');
+          if (completeBtn) {
+            completeBtn.dataset.selected = 'false';
+            completeBtn.style.cursor = 'pointer';
+
+            // Set initial unchecked visual state
+            const svg = completeBtn.querySelector('svg');
+            if (svg) {
+              svg.style.opacity = '0.3';
+              svg.style.color = 'var(--colors-text-tertiary, #666)';
+            }
+
+            completeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const isChecked = completeBtn.dataset.selected === 'true';
+              completeBtn.dataset.selected = isChecked ? 'false' : 'true';
+              // Toggle visual state
+              const svgEl = completeBtn.querySelector('svg');
+              if (svgEl) {
+                svgEl.style.opacity = isChecked ? '0.3' : '1';
+                svgEl.style.color = isChecked ? 'var(--colors-text-tertiary, #666)' : 'var(--colors-meta-opaque-green, #4CAF50)';
+              }
+            });
+          }
+
+          fakeEl.style.position = 'relative';
+          fakeEl.style.transform = 'none';
+          fakeEl.classList.add('frame-ego-injected');
+
+          // Add hover effect to match real comments
+          fakeEl.addEventListener('mouseenter', () => {
+            fakeEl.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+          });
+          fakeEl.addEventListener('mouseleave', () => {
+            fakeEl.style.backgroundColor = '';
+          });
+
+          // Insert at random position
+          const children = Array.from(virtualizedList.children);
+          const randomIdx = Math.floor(Math.random() * (children.length + 1));
+          const refChild = children[randomIdx] || null;
+          virtualizedList.insertBefore(fakeEl, refChild);
+        });
+
+        virtualizedList.dataset.frameEgoMixed = 'true';
+        console.info(`Frame.ego: Mixed ${realWrappers.length} real + ${comments.length} fake V4 comments`);
+
+        // Watch for new comments AND style updates from virtualization
+        const convertToNormalFlow = (element) => {
+          if (element.nodeType === 1 && !element.classList.contains('frame-ego-injected')) {
+            element.style.position = 'relative';
+            element.style.transform = 'none';
+          }
+        };
+
+        // Convert all current children
+        Array.from(virtualizedList.children).forEach(convertToNormalFlow);
+
+        const listObserver = new MutationObserver((mutations) => {
+          mutations.forEach(mutation => {
+            // Handle new nodes
+            mutation.addedNodes.forEach(convertToNormalFlow);
+            // Handle style attribute changes on existing nodes
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+              convertToNormalFlow(mutation.target);
+            }
+          });
+        });
+        listObserver.observe(virtualizedList, {
+          childList: true,
+          attributes: true,
+          attributeFilter: ['style'],
+          subtree: true
+        });
+
+        return; // Exit early - all comments handled
+      }
+    } else {
+      // V3: Use the parent of the reference node and random insertion
+      targetContainer = (referenceNode && referenceNode.parentNode) ? referenceNode.parentNode : container;
+
+      const currentChildren = targetContainer.children;
+      const randomIdx = Math.floor(Math.random() * (currentChildren.length + 1));
+      const referenceChild = currentChildren[randomIdx] || null;
+      targetContainer.insertBefore(commentEl, referenceChild);
+    }
   });
 
-  console.info(`Frame.ego: Successfully injected ${comments.length} comments.`);
+  console.info(`Frame.ego: Successfully injected ${comments.length} comments (${isV4 ? 'V4' : 'V3'} mode).`);
 }
 
 // Start
