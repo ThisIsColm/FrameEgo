@@ -5,6 +5,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const hypeLabelsContainer = document.getElementById('hypeLabels');
     const freqLabelsContainer = document.getElementById('freqLabels');
 
+    function checkWarning() {
+        const hVal = parseInt(hypeSlider.value, 10);
+        const fVal = parseInt(freqSlider.value, 10);
+        const warningBox = document.getElementById('warningBox');
+
+        if (hVal === 2 && fVal === 2) {
+            warningBox.style.display = 'block';
+        } else {
+            warningBox.style.display = 'none';
+        }
+    }
+
     // Mapping for discrete values
     const hypeLevels = ["Mild", "Spicy", "Unhinged"];
     const freqLevels = ["A Sprinkle", "Plenty", "Spam"];
@@ -28,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateLabels(container, index, slider, levels, storageKey);
                     const label = levels[index];
                     chrome.storage.sync.set({ [storageKey]: label });
+                    checkWarning();
                 });
             }
         });
@@ -55,6 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialFreq = fIndex !== -1 ? fIndex : 1;
         freqSlider.value = initialFreq;
         updateLabels(freqLabelsContainer, initialFreq, freqSlider, freqLevels, 'commentFrequency');
+
+        checkWarning();
     });
 
     // Listen for changes
@@ -77,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLabels(hypeLabelsContainer, val, hypeSlider, hypeLevels, 'hypeLevel');
         const label = hypeLevels[val];
         chrome.storage.sync.set({ hypeLevel: label });
+        checkWarning();
     });
 
     freqSlider.addEventListener('input', () => {
@@ -84,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLabels(freqLabelsContainer, val, freqSlider, freqLevels, 'commentFrequency');
         const label = freqLevels[val];
         chrome.storage.sync.set({ commentFrequency: label });
+        checkWarning();
     });
 
     // Boost/Disable button - behavior depends on current state

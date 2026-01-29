@@ -40,8 +40,6 @@
         <div class="setting-group">
             <div class="setting-label">
                 Hype Level
-                <div class="info-tooltip" data-tooltip="Choose how hard you want
-to be gaslit today.">ⓘ</div>
             </div>
             <input type="range" id="hypeLevel" min="0" max="2" step="1" value="1">
             <div class="slider-labels" id="hypeLabels">
@@ -57,8 +55,6 @@ to be gaslit today.">ⓘ</div>
         <div class="setting-group">
             <div class="setting-label">
                 Fanbase Size
-                <div class="info-tooltip"
-                    data-tooltip="Dial up the volume of praise until you can’t hear your own doubts.">ⓘ</div>
             </div>
             <input type="range" id="commentFrequency" min="0" max="2" step="1" value="1">
             <div class="slider-labels" id="freqLabels">
@@ -69,6 +65,11 @@ to be gaslit today.">ⓘ</div>
         </div>
 
         <div class="divider"></div>
+
+        <!-- Warning Box -->
+        <div id="warningBox" class="warning-box">
+            Warning: Editor confidence may occur.
+        </div>
 
         <!-- Boost Button -->
         <button id="boostBtn" class="boost-btn">STROKE MY EGO</button>
